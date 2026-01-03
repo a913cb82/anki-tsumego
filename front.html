@@ -395,12 +395,23 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
             } catch (error) {
                 return; // Silently fail on parse error
             }
-            autoCropSgf(sgf);
+            autoCropSgf(sgf, editor);
             besogo.loadSgf(sgf, editor);
         }
 
-        function autoCropSgf(sgf) {
+        function autoCropSgf(sgf, editor) {
             var minX = 53, minY = 53, maxX = 0, maxY = 0;
+            var originalSizeX = 19, originalSizeY = 19;
+
+            // Find original size
+            for(var i=0; i<sgf.props.length; i++) {
+                if (sgf.props[i].id === 'SZ') {
+                    var size = besogo.parseSize(sgf.props[i].values[0]);
+                    originalSizeX = size.x;
+                    originalSizeY = size.y;
+                    break;
+                }
+            }
             
             function charToNum(c) {
                 if (c >= 'a' && c <= 'z') return c.charCodeAt(0) - 96;
@@ -448,6 +459,45 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
             findBounds(sgf);
 
             if (minX > maxX || minY > maxY) return;
+
+            // Determine crop info before shifting
+            // If minX > 1, then left side is cropped (not a real edge)
+            // If maxX < originalSizeX, then right side is cropped
+            if (editor) {
+                var crop = {
+                    left: minX === 1,
+                    right: maxX === originalSizeX,
+                    top: minY === 1,
+                    bottom: maxY === originalSizeY
+                };
+
+                // Apply transformations to crop info to match probVar
+                // 1. Horizontal Flip
+                if (probVar & 1) {
+                    var tmp = crop.left;
+                    crop.left = crop.right;
+                    crop.right = tmp;
+                }
+                // 2. Vertical Flip
+                if (probVar & 2) {
+                    var tmp = crop.top;
+                    crop.top = crop.bottom;
+                    crop.bottom = tmp;
+                }
+                // 3. Diagonal Flip (Swap X and Y)
+                if (probVar & 4) {
+                    // Left (min x) <-> Top (min y)
+                    var tmp = crop.left;
+                    crop.left = crop.top;
+                    crop.top = tmp;
+                    // Right (max x) <-> Bottom (max y)
+                    tmp = crop.right;
+                    crop.right = crop.bottom;
+                    crop.bottom = tmp;
+                }
+
+                editor.cropInfo = crop;
+            }
 
             minX = Math.max(1, minX - 1);
             minY = Math.max(1, minY - 1);
@@ -661,7 +711,8 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
             var boardWidth,
                 boardHeight,
                 string = "", // Path string for inner board lines
-                i; // Scratch iteration variable
+                i, // Scratch iteration variable
+                crop = editor.cropInfo || { left: true, right: true, top: true, bottom: true };
 
             BOARD_MARGIN = (coord === 'none' ? 0 : COORD_MARGIN) + EXTRA_MARGIN;
             boardWidth = 2 * BOARD_MARGIN + sizeX * CELL_SIZE;
@@ -679,20 +730,19 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
                 'class': 'besogo-svg-board'
             }));
 
-            svg.appendChild(besogo.svgEl("rect", { // Draw outer square of board
-                width: CELL_SIZE * (sizeX - 1),
-                height: CELL_SIZE * (sizeY - 1),
-                x: svgPos(1),
-                y: svgPos(1),
-                'class': 'besogo-svg-lines'
-            }));
-
-            for (i = 2; i <= (sizeY - 1); i++) { // Horizontal inner lines
+            // Horizontal lines
+            for (i = 1; i <= sizeY; i++) {
+                if (i === 1 && !crop.top) continue;
+                if (i === sizeY && !crop.bottom) continue;
                 string += "M" + svgPos(1) + "," + svgPos(i) + "h" + CELL_SIZE * (sizeX - 1);
             }
-            for (i = 2; i <= (sizeX - 1); i++) { // Vertical inner lines
+            // Vertical lines
+            for (i = 1; i <= sizeX; i++) {
+                if (i === 1 && !crop.left) continue;
+                if (i === sizeX && !crop.right) continue;
                 string += "M" + svgPos(i) + "," + svgPos(1) + "v" + CELL_SIZE * (sizeY - 1);
             }
+
             svg.appendChild(besogo.svgEl("path", { // Draw inner lines of board
                 d: string,
                 'class': 'besogo-svg-lines'
@@ -2791,6 +2841,11 @@ function loadProp(node, prop) {
                 value = node.props[i].values.join().trim(); // Join the values array
                 if (id === 'SZ') { // Size property
                     size = besogo.parseSize(value);
+                    if (probVar & 4) { // Swap dimensions if diagonal flip
+                        var temp = size.x;
+                        size.x = size.y;
+                        size.y = temp;
+                    }
                 } else if (id === 'ST') { // Style property
                     editor.setVariantStyle(+value); // Converts value to number
                 } else if (gameInfoIds.indexOf(id) !== -1) { // Game info property
@@ -2806,27 +2861,33 @@ function loadProp(node, prop) {
         }
 
         // Converts letters to numerical coordinates
-function lettersToCoords(letters) {
-    if (letters.match(/^[A-Za-z]{2}$/)) { // Verify input is two letters
-        let result = {
-            x: charToNum(letters.charAt(0)),
-            y: charToNum(letters.charAt(1))
-        };
-        if (probVar & 1) { result.x = size.x + 1 - result.x };  // Flip horizontally
-        if (probVar & 2) { result.y = size.y + 1 - result.y };  // Flip vertically
-        if (probVar & 4) {                                      // Flip diagonally
-            let temp = result.x;
-            result.x = result.y;
-            result.y = temp;
-        };
-        return result;
-    } else { // Anything but two letters
-        return {
-            x: 0,
-            y: 0
-        }; // Return (0, 0) coordinates
-    }
-}
+        function lettersToCoords(letters) {
+            if (letters.match(/^[A-Za-z]{2}$/)) { // Verify input is two letters
+                let result = {
+                    x: charToNum(letters.charAt(0)),
+                    y: charToNum(letters.charAt(1))
+                };
+                
+                // Determine dimensions for flipping
+                // If probVar & 4, size is swapped relative to the coordinate space of result (pre-swap)
+                let width = (probVar & 4) ? size.y : size.x;
+                let height = (probVar & 4) ? size.x : size.y;
+
+                if (probVar & 1) { result.x = width + 1 - result.x };  // Flip horizontally
+                if (probVar & 2) { result.y = height + 1 - result.y };  // Flip vertically
+                if (probVar & 4) {                                      // Flip diagonally
+                    let temp = result.x;
+                    result.x = result.y;
+                    result.y = temp;
+                };
+                return result;
+            } else { // Anything but two letters
+                return {
+                    x: 0,
+                    y: 0
+                }; // Return (0, 0) coordinates
+            }
+        }
 
         function charToNum(c) { // Helper for lettersToCoords
             if (c.match(/[A-Z]/)) { // Letters A-Z to 27-52
