@@ -26,6 +26,23 @@ if (Persistence.isAvailable()) {
 function nextMove() {
     document.querySelector('[title="Next node"]').click();
 }
+
+function checkComment(comment) {
+    const goodAnswers = ["CORRECT", "RIGHT"];
+    const badAnswers = ["INCORRECT", "WRONG", "FAIL"];
+    if (!comment) return 0;
+    for (let answer of goodAnswers) {
+        if (comment.toUpperCase().startsWith(answer)) {
+            return(1);
+        }
+    };
+    for (let answer of badAnswers) {
+        if (comment.toUpperCase().startsWith(answer)) {
+            return(-1);
+        }
+    };
+    return(0);
+}
 if (typeof myTimeout !== 'undefined') {
     clearTimeout(myTimeout);
 };
@@ -3407,7 +3424,7 @@ besogo.composeSgf = function(editor) {
         return besogo.svgEl("circle", {
             cx: x,
             cy: y,
-            r: 27,
+            r: 46,
             stroke: color,
             "stroke-width": 8,
             fill: "none"
@@ -3781,6 +3798,8 @@ besogo.makeTreePanel = function(container, editor) {
             width, // Calculated dimensions of the SVG
             height;
 
+        markCorrectPaths(root); // Pre-pass to mark nodes on correct paths
+
         svg = besogo.svgEl("svg");
         bottomLayer = besogo.svgEl("g"); // Holder for the current marker
         pathGroup = besogo.svgEl("g"); // Holder for path elements
@@ -3805,6 +3824,21 @@ besogo.makeTreePanel = function(container, editor) {
         }
 
         setCurrentMarker(current.navTreeMarker); // Set current marker and ensure visible
+
+        function markCorrectPaths(node) {
+            let isCorrect = false;
+            if (node.children.length === 0) {
+                isCorrect = checkComment(node.comment) === 1;
+            } else {
+                for (let i = 0; i < node.children.length; i++) {
+                    if (markCorrectPaths(node.children[i])) {
+                        isCorrect = true;
+                    }
+                }
+            }
+            node.isOnCorrectPath = isCorrect;
+            return isCorrect;
+        }
     } // END function rebuildNavTree
 
     // Recursively builds the tree
@@ -3813,7 +3847,7 @@ besogo.makeTreePanel = function(container, editor) {
             position,
             path,
             childPath,
-            i; // Scratch iteration variable
+            i; // Scratch iteration variables
 
         if (children.length === 0) { // Reached end of branch
             path = 'm' + svgPos(x) + ',' + svgPos(y); // Start path at end of branch
@@ -3865,6 +3899,18 @@ besogo.makeTreePanel = function(container, editor) {
             default: // Empty node
                 element = besogo.svgStone(svgPos(x), svgPos(y)); // Grey stone
         }
+
+        // Highlight all nodes on paths leading to a correct leaf
+        if (node.isOnCorrectPath) {
+            if (node.getType() !== 'move' && node.getType() !== 'setup') {
+                // If it was just a grey stone (empty node), make it a group so we can add the circle
+                let g = besogo.svgEl("g");
+                g.appendChild(element);
+                element = g;
+            }
+            element.appendChild(besogo.svgCircle(svgPos(x), svgPos(y), 'limegreen'));
+        }
+
         node.navTreeIcon = element; // Save icon reference in game state tree
         node.navTreeX = x; // Save position of the icon
         node.navTreeY = y;
