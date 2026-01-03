@@ -395,7 +395,122 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
             } catch (error) {
                 return; // Silently fail on parse error
             }
+            autoCropSgf(sgf);
             besogo.loadSgf(sgf, editor);
+        }
+
+        function autoCropSgf(sgf) {
+            var minX = 53, minY = 53, maxX = 0, maxY = 0;
+            
+            function charToNum(c) {
+                if (c >= 'a' && c <= 'z') return c.charCodeAt(0) - 96;
+                if (c >= 'A' && c <= 'Z') return c.charCodeAt(0) - 38;
+                return 0;
+            }
+            
+            function numToChar(n) {
+                if (n >= 1 && n <= 26) return String.fromCharCode(n + 96);
+                if (n >= 27 && n <= 52) return String.fromCharCode(n + 38);
+                return '';
+            }
+
+            function getCoords(str) {
+                if (!str || str.length < 2) return null;
+                var x = charToNum(str.charAt(0));
+                var y = charToNum(str.charAt(1));
+                return {x: x, y: y};
+            }
+
+            function findBounds(node) {
+                for (var i = 0; i < node.props.length; i++) {
+                    var p = node.props[i];
+                    if (['B', 'W', 'AB', 'AW', 'AE', 'CR', 'SQ', 'TR', 'MA', 'M', 'SL', 'LB', 'L'].indexOf(p.id) !== -1) {
+                        for (var j = 0; j < p.values.length; j++) {
+                            var v = p.values[j];
+                            var parts = v.split(':');
+                            for (var k = 0; k < parts.length; k++) {
+                                var c = getCoords(parts[k].substring(0, 2));
+                                if (c) {
+                                    if (c.x < minX) minX = c.x;
+                                    if (c.x > maxX) maxX = c.x;
+                                    if (c.y < minY) minY = c.y;
+                                    if (c.y > maxY) maxY = c.y;
+                                }
+                            }
+                        }
+                    }
+                }
+                for (var i = 0; i < node.children.length; i++) {
+                    findBounds(node.children[i]);
+                }
+            }
+
+            findBounds(sgf);
+
+            if (minX > maxX || minY > maxY) return;
+
+            minX = Math.max(1, minX - 1);
+            minY = Math.max(1, minY - 1);
+            maxX = maxX + 1; 
+            maxY = maxY + 1;
+
+            var shiftX = minX - 1;
+            var shiftY = minY - 1;
+            var newSizeX = maxX - minX + 1;
+            var newSizeY = maxY - minY + 1;
+            
+            if (newSizeX < 1) newSizeX = 1;
+            if (newSizeY < 1) newSizeY = 1;
+
+            var szProp = null;
+            for(var i=0; i<sgf.props.length; i++) {
+                if (sgf.props[i].id === 'SZ') {
+                    szProp = sgf.props[i];
+                    break;
+                }
+            }
+            if (!szProp) {
+                szProp = {id: 'SZ', values: []};
+                sgf.props.push(szProp);
+            }
+            szProp.values[0] = newSizeX + ':' + newSizeY;
+
+            function shiftCoords(node) {
+                for (var i = 0; i < node.props.length; i++) {
+                    var p = node.props[i];
+                    if (['B', 'W', 'AB', 'AW', 'AE', 'CR', 'SQ', 'TR', 'MA', 'M', 'SL', 'LB', 'L'].indexOf(p.id) !== -1) {
+                        for (var j = 0; j < p.values.length; j++) {
+                            var v = p.values[j];
+                            var parts = v.split(':');
+                            var newV = "";
+                            for (var k = 0; k < parts.length; k++) {
+                                var c = getCoords(parts[k].substring(0, 2));
+                                if (c) {
+                                    c.x -= shiftX;
+                                    c.y -= shiftY;
+                                    var newCoordStr = numToChar(c.x) + numToChar(c.y);
+                                    if (parts[k].length > 2) {
+                                        newCoordStr += parts[k].substring(2);
+                                    }
+                                    if (k > 0) newV += ":";
+                                    newV += newCoordStr;
+                                } else {
+                                     if (parts[k] === "") {
+                                         if (k > 0) newV += ":";
+                                         newV += ""; 
+                                     }
+                                }
+                            }
+                            p.values[j] = newV;
+                        }
+                    }
+                }
+                for (var i = 0; i < node.children.length; i++) {
+                    shiftCoords(node.children[i]);
+                }
+            }
+
+            shiftCoords(sgf);
         }
 
         // Fetches text file at url from same domain
