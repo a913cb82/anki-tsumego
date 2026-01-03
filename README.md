@@ -20,7 +20,7 @@ This project originated from [TowelSniffer/Anki-go](https://github.com/TowelSnif
 ### 1. Create the Note Type
 1. In Anki, go to **Tools** -> **Manage Note Types**.
 2. Click **Add** -> **Add: Basic**.
-3. Name it "Tsumego (Besogo)".
+3. Name it.
 4. Click **Fields...** and ensure you have a field named `SGF`.
 
 ### 2. Populate Templates
