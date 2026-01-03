@@ -427,7 +427,11 @@ if (typeof myTimeout !== 'undefined') {
                 left: minX === 1,
                 right: maxX === originalSizeX,
                 top: minY === 1,
-                bottom: maxY === originalSizeY
+                bottom: maxY === originalSizeY,
+                shiftX: Math.max(1, minX - 1) - 1,
+                shiftY: Math.max(1, minY - 1) - 1,
+                originalSizeX: originalSizeX,
+                originalSizeY: originalSizeY
             };
 
             // Apply transformations to crop info to match probVar
@@ -748,33 +752,79 @@ if (typeof myTimeout !== 'undefined') {
 
         // Draws hoshi onto the board at procedurally generated locations
         function drawHoshi() {
-            var cx, cy, // Center point calculation
-                pathStr = ""; // Path string for drawing star points
+            var pathStr = ""; // Path string for drawing star points
+            var crop = editor.cropInfo || {};
+            
+            // Use original size if cropped, otherwise current size.
+            // Note: originalSizeX/Y are unrotated.
+            var ox = crop.originalSizeX || sizeX;
+            var oy = crop.originalSizeY || sizeY;
+            
+            // If crop info is missing (e.g. uncropped board), we need to ensure ox/oy match the UNROTATED dimensions
+            // if probVar & 4 is set.
+            // sizeX/sizeY are currently displayed dimensions (rotated if probVar & 4).
+            // If no crop info, then unrotated dimensions are:
+            if (!crop.originalSizeX && (probVar & 4)) {
+                ox = sizeY;
+                oy = sizeX;
+            }
 
-            if (sizeX % 2 && sizeY % 2) { // Draw center hoshi if both dimensions are odd
-                cx = (sizeX - 1) / 2 + 1; // Calculate the center of the board
-                cy = (sizeY - 1) / 2 + 1;
-                drawStar(cx, cy);
+            var points = [];
 
-                if (sizeX >= 17 && sizeY >= 17) { // Draw side hoshi if at least 17x17 and odd
-                    drawStar(4, cy);
-                    drawStar(sizeX - 3, cy);
-                    drawStar(cx, 4);
-                    drawStar(cx, sizeY - 3);
+            if (ox % 2 && oy % 2) { // Draw center hoshi if both dimensions are odd
+                var cx = (ox - 1) / 2 + 1; 
+                var cy = (oy - 1) / 2 + 1;
+                points.push({x: cx, y: cy});
+
+                if (ox >= 17 && oy >= 17) { // Draw side hoshi if at least 17x17 and odd
+                    points.push({x: 4, y: cy});
+                    points.push({x: ox - 3, y: cy});
+                    points.push({x: cx, y: 4});
+                    points.push({x: cx, y: oy - 3});
                 }
             }
 
-            if (sizeX >= 11 && sizeY >= 11) { // Corner hoshi at (4, 4) for larger sizes
-                drawStar(4, 4);
-                drawStar(4, sizeY - 3);
-                drawStar(sizeX - 3, 4);
-                drawStar(sizeX - 3, sizeY - 3);
-            } else if (sizeX >= 8 && sizeY >= 8) { // Corner hoshi at (3, 3) for medium sizes
-                drawStar(3, 3);
-                drawStar(3, sizeY - 2);
-                drawStar(sizeX - 2, 3);
-                drawStar(sizeX - 2, sizeY - 2);
-            } // No corner hoshi for smaller sizes
+            if (ox >= 11 && oy >= 11) { // Corner hoshi at (4, 4) for larger sizes
+                points.push({x: 4, y: 4});
+                points.push({x: 4, y: oy - 3});
+                points.push({x: ox - 3, y: 4});
+                points.push({x: ox - 3, y: oy - 3});
+            } else if (ox >= 8 && oy >= 8) { // Corner hoshi at (3, 3) for medium sizes
+                points.push({x: 3, y: 3});
+                points.push({x: 3, y: oy - 2});
+                points.push({x: ox - 2, y: 3});
+                points.push({x: ox - 2, y: oy - 2});
+            }
+
+            // Transform points to cropped and flipped coordinates
+            var shiftX = (crop.shiftX !== undefined) ? crop.shiftX : 0;
+            var shiftY = (crop.shiftY !== undefined) ? crop.shiftY : 0;
+            
+            // Dimensions of the unrotated cropped board
+            // If probVar & 4, sizeX/sizeY are swapped relative to unrotated.
+            var unrotW = (probVar & 4) ? sizeY : sizeX;
+            var unrotH = (probVar & 4) ? sizeX : sizeY;
+
+            for (var k = 0; k < points.length; k++) {
+                var p = points[k];
+                // Apply Shift (to get to unrotated cropped coords)
+                var tx = p.x - shiftX;
+                var ty = p.y - shiftY;
+
+                // Check if point is within the visible cropped area
+                if (tx >= 1 && tx <= unrotW && ty >= 1 && ty <= unrotH) {
+                    // Apply ProbVar flips/rotations to map to display coordinates
+                    // Logic mirrors lettersToCoords
+                    if (probVar & 1) { tx = unrotW + 1 - tx; }
+                    if (probVar & 2) { ty = unrotH + 1 - ty; }
+                    if (probVar & 4) {
+                        var tmp = tx;
+                        tx = ty;
+                        ty = tmp;
+                    }
+                    drawStar(tx, ty);
+                }
+            }
 
             if (pathStr) { // Only need to add if hoshi drawn
                 svg.appendChild(besogo.svgEl('path', { // Drawing circles via path points
