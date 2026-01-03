@@ -1,0 +1,220 @@
+::-webkit-scrollbar {
+  display: none;
+}
+
+html, body, #qa, #content {
+  margin:0 !important;
+}
+
+/*  a simple way to stop inverted colours on ankidroid*/
+
+#qa {
+  height: 100vh;
+  width: 100vw;
+  display: grid;
+  place-items: center;
+}
+
+iframe {
+	margin: 0 !important;
+  color: black !important;
+  font-size: 22px;
+}
+
+#frontGo {
+	width: 100vw !important;
+  max-width: min(700px, 100vw, 100vh);
+	height:100vh !important;
+	max-height: min(700px, 100vw, 100vh);
+}
+#backGo {
+	width: min(100vw, 1400px) !important;
+}
+
+.besogo-comment>input {
+  display: none;
+}
+
+.besogo-container {
+  color: #CDD6F4;
+  margin: auto;
+  outline: none;
+  display: flex;
+}
+
+.besogo-container * {
+  box-sizing: border-box;
+}
+
+.besogo-container button {
+  height: 30px;
+  width: 30px;
+  padding: 0px;
+  background: #CDD6F4;
+}
+
+.besogo-container input {
+  font-size: 12pt;
+}
+
+.besogo-container input[type='button'] {
+  background: #CDD6F4;
+  color: #11111B;
+}
+
+.besogo-container input[type='text'] {
+  width: 30px;
+}
+
+.besogo-container svg {
+  /* Prevent text selection within SVG */
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Chrome/Safari/Opera */
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+}
+
+.besogo-panels {
+  flex-direction: column;
+  align-items: center;
+  padding: 0px 5px;
+}
+
+.besogo-panels>* {
+  margin: 3px 0px;
+}
+
+.besogo-control {
+  display: none;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.besogo-names {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.besogo-playerInfo {
+  display: flex;
+  font-family: Tahoma, Geneva, sans-serif;
+  white-space: pre-wrap;
+}
+
+.besogo-blackInfo {
+  flex: 50%;
+  color: white;
+  background: black;
+  text-align: right;
+  padding: 5px;
+}
+
+.besogo-whiteInfo {
+  flex: 50%;
+  color: black;
+  background: white;
+  text-align: left;
+  padding: 5px;
+}
+
+.besogo-blackCaps {
+  float: left;
+}
+
+.besogo-whiteCaps {
+  float: right;
+}
+
+.besogo-comment {
+  font-family: Georgia, serif;
+  font-size: 12pt;
+  white-space: pre-wrap;
+  overflow: auto;
+  flex: 1 1 60%;
+  width: 100%;
+}
+
+.besogo-comment input[type='button'] {
+  float: right;
+}
+
+.besogo-comment textarea {
+  height: 100%;
+  width: 100%;
+}
+
+.besogo-gameInfo {
+  padding: 5px;
+  border-collapse: collapse;
+}
+
+.besogo-gameInfo td, tr {
+  border: 1px solid black;
+  padding: 3px;
+}
+
+.besogo-tool {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.besogo-tree {
+  overflow: auto;
+  flex: 1 1 40%;
+  width: 100%;
+}
+
+/* Kaya board theme */
+.besogo-svg-board {
+  fill: none;
+}
+
+.besogo-svg-backer {
+  fill: #fcbc5b;
+}
+
+.besogo-board {
+  margin: 6px;
+  background: #F1C38E;
+}
+
+.besogo-svg-lines {
+  stroke: #151515;
+  stroke-width: 2.5;
+  fill: none;
+}
+
+.besogo-svg-hoshi {
+  stroke: #151515;
+  stroke-width: 12;
+}
+
+.besogo-svg-blackStone {
+  fill: #252525;
+  stroke: #252525;
+  stroke-width: 4;
+}
+
+.besogo-svg-whiteStone {
+  fill: #f5f5f5;
+  stroke: #f5f5f5;
+  stroke-width: 4;
+}
+
+.besogo-svg-greyStone {
+  fill: #929591;
+  stroke: #929591;
+  stroke-width: 4;
+}
