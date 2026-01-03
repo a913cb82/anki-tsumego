@@ -354,7 +354,7 @@ if (typeof myTimeout !== 'undefined') {
         } catch (error) {
             return; // Silently fail on parse error
         }
-        autoCropSgf(sgf);
+        autoCropSgf(sgf, editor);
         besogo.loadSgf(sgf, editor);
     }
 
