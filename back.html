@@ -3420,13 +3420,13 @@ besogo.composeSgf = function(editor) {
     };
 
     // Makes a circle at (x, y)
-    besogo.svgCircle = function(x, y, color) {
+    besogo.svgCircle = function(x, y, color, strokeWidth) {
         return besogo.svgEl("circle", {
             cx: x,
             cy: y,
             r: 46,
             stroke: color,
-            "stroke-width": 8,
+            "stroke-width": strokeWidth || 8,
             fill: "none"
         });
     };
@@ -3908,7 +3908,8 @@ besogo.makeTreePanel = function(container, editor) {
                 g.appendChild(element);
                 element = g;
             }
-            element.appendChild(besogo.svgCircle(svgPos(x), svgPos(y), 'limegreen'));
+            let isCorrectLeaf = (node.children.length === 0); // Correctness already checked by isOnCorrectPath
+            element.appendChild(besogo.svgCircle(svgPos(x), svgPos(y), 'limegreen', isCorrectLeaf ? 16 : 8));
         }
 
         node.navTreeIcon = element; // Save icon reference in game state tree
