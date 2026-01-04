@@ -3958,7 +3958,7 @@ besogo.makeTreePanel = function(container, editor) {
     function finishPath(path, color) { // Finishes path element
         var element = besogo.svgEl("path", {
             d: path,
-            stroke: color,
+            stroke: (color === 'black') ? 'currentColor' : color,
             "stroke-width": 8,
             fill: "none"
         });
