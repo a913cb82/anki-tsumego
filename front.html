@@ -8,6 +8,7 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
     var realstones = false;
     var first2move = 0;
     var errorCount = 0; // trackes mistakes
+    var totalErrorCount = 0; // tracks total mistakes
     var handicap = 3; // how many mistakes can be made before next move is made automatically
     var initTracker = 0; // tracks if board has been initiated
     var solvedState = false; // tracks if puzzle is solved
@@ -30,6 +31,7 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
     function checkComment(comment) {
         const goodAnswers = ["CORRECT", "RIGHT"];
         const badAnswers = ["INCORRECT", "WRONG", "FAIL"];
+        if (!comment) return 0;
         for (let answer of goodAnswers) {
             if (comment.toUpperCase().startsWith(answer)) {
                 return(1);
@@ -1458,7 +1460,13 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
             hideVariantButton, // Button for toggling show/hide variants
             childVariantElement, // SVG element for child style variants
             siblingVariantElement, // SVG element for sibling style variants
-            hideVariantElement; // SVG element for hiding variants
+            hideVariantElement, // SVG element for hiding variants
+            messageDiv = document.createElement('div');
+
+        messageDiv.className = 'besogo-comment';
+        messageDiv.style.textAlign = 'center';
+        messageDiv.style.flex = '0 0 auto';
+        container.parentElement.appendChild(messageDiv);
 
         drawNavButtons();
         drawStyleButtons();
@@ -1479,7 +1487,12 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
 
 if (msg.navChange || msg.treeChange) { // Update the navigation buttons
     current = editor.getCurrent();
-    checkComment(current.comment);
+    let status = checkComment(current.comment);
+    
+    if (!current.parent) { // Reset error count at root
+        totalErrorCount = 0;
+    }
+
     if (current.parent) { // Has parent
         arraySetColor(leftElements, 'black');
         if (current.parent.children.length > 1) { // Has siblings
@@ -1502,11 +1515,18 @@ initTracker++
 initTracker++
         }
 				document.getElementsByClassName("besogo-board")[0].style.boxShadow ="0px 0px 6px 0px grey";
+        messageDiv.innerText = "";
     } else { // No children
         solvedState = true;
         arraySetColor(rightElements, besogo.GREY);
         document.getElementsByClassName("besogo-board")[0].style.borderColor = ""+solvedColour+"";
         document.getElementsByClassName("besogo-board")[0].style.boxShadow ="0px 0px 6px 0px "+solvedColour+"";
+        
+        let message = current.comment || "";
+        if (status === 1) { // CORRECT
+            message += "\nTotal Errors: " + totalErrorCount;
+        }
+        messageDiv.innerText = message;
     }
 }
 
@@ -2187,6 +2207,7 @@ initTracker++
                 }
                 if (!solvedState) {
                     errorCount++;
+                    totalErrorCount++;
                     if (errorCount === handicap) {
                         errorCount = 0;
                         nextMove(current.children.length);
