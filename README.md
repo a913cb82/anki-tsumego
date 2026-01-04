@@ -4,7 +4,7 @@ A feature-rich Go (Weiqi/Baduk) problem template for Anki, designed for practici
 
 This project originated from [TowelSniffer/Anki-go](https://github.com/TowelSniffer/Anki-go) and utilizes a modified version of the [besogo](https://yewang.github.io/besogo/) editor.
 
-This works with SGF from [ogs_to_anki](https://github.com/a913cb82/ogs_to_anki).
+This works with SGF from [ogs-to-anki](https://github.com/a913cb82/ogs-to-anki).
 
 ## Features
 
