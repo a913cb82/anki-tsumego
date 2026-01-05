@@ -800,7 +800,7 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
         // Draws hoshi onto the board at procedurally generated locations
         function drawHoshi() {
             var pathStr = ""; // Path string for drawing star points
-            var crop = editor.cropInfo || {};
+            var crop = editor.cropInfo || { left: true, right: true, top: true, bottom: true };
             
             // Use original size if cropped, otherwise current size.
             // Note: originalSizeX/Y are unrotated.
@@ -869,6 +869,13 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
                         tx = ty;
                         ty = tmp;
                     }
+
+                    // Skip hoshi if it falls on a cropped edge
+                    if ((tx === 1 && !crop.left) || (tx === sizeX && !crop.right) ||
+                        (ty === 1 && !crop.top) || (ty === sizeY && !crop.bottom)) {
+                        continue;
+                    }
+
                     drawStar(tx, ty);
                 }
             }
