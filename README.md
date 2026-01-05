@@ -11,6 +11,7 @@ This works with SGF from [ogs-to-anki](https://github.com/a913cb82/ogs-to-anki).
 - **Automatic Cropping**: Detects stone bounds in the SGF and crops the board to fit, adding 1-intersection padding.
 - **Open Edges**: Cropped edges that are not true board boundaries are rendered without lines, following standard tsumego book conventions.
 - **Random Transformations**: Supports 8 variations (horizontal/vertical flips and transpositions) to prevent memorizing coordinates.
+- **Color Normalization**: Automatically swaps colors if the first move is white, ensuring the problem always starts with black (following standard tsumego conventions).
 - **Solution Highlighting**: The analysis tree on the back highlights all paths leading to a correct solution (comments starting with "CORRECT" or "RIGHT").
 - **Interactive Analysis**: Full analysis board on the backside to explore variations.
 - **Mistake Tracking**: Changes the board border color to indicate mistakes based on SGF comments ("INCORRECT", "WRONG", "FAIL").
