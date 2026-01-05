@@ -2735,12 +2735,29 @@ besogo.loadSgf = function(sgf, editor) {
         firstMoveBlank = true,
         root;
 
+    if (findFirstMove(sgf) === 'W') {
+        probVar = probVar ^ 8;
+    }
+
     loadRootProps(sgf); // Load size, variants style and game info
     root = besogo.makeGameRoot(size.x, size.y);
 
     loadNodeTree(sgf, root); // Load the rest of game tree
     markCorrectPaths(root); // Pre-pass to mark nodes on correct paths
     editor.loadRoot(root); // Load root into the editor
+
+    function findFirstMove(node) {
+        var i, first;
+        for (i = 0; i < node.props.length; i++) {
+            if (node.props[i].id === 'B') return 'B';
+            if (node.props[i].id === 'W') return 'W';
+        }
+        for (i = 0; i < node.children.length; i++) {
+            first = findFirstMove(node.children[i]);
+            if (first) return first;
+        }
+        return null;
+    }
 
     // Loads the game tree
     function loadNodeTree(sgfNode, gameNode) {
