@@ -607,6 +607,7 @@ if (typeof myTimeout !== 'undefined') {
 
             svg, // Holds the overall board display SVG element
             stoneGroup, // Group for stones
+            nextMoveGroup, // Group for next move indicators
             markupGroup, // Group for markup
             hoverGroup, // Group for hover layer
             markupLayer, // Array of markup layer elements
@@ -639,9 +640,11 @@ if (typeof myTimeout !== 'undefined') {
 
             stoneGroup = besogo.svgEl("g");
             markupGroup = besogo.svgEl("g");
+            nextMoveGroup = besogo.svgEl("g");
 
             svg.appendChild(stoneGroup); // Add placeholder group for stone layer
             svg.appendChild(markupGroup); // Add placeholder group for markup layer
+            svg.appendChild(nextMoveGroup); // Add placeholder group for next moves
 
             if (!TOUCH_FLAG) {
                 hoverGroup = besogo.svgEl("g");
@@ -674,6 +677,7 @@ if (typeof myTimeout !== 'undefined') {
             // Redraw stones only if needed
             if (reinit || msg.navChange || msg.stoneChange) {
                 redrawStones(current);
+                redrawNextMoves(current);
                 redrawMarkup(current);
                 redrawHover(current);
             } else if (msg.markupChange) {
@@ -686,8 +690,34 @@ if (typeof myTimeout !== 'undefined') {
 
         function redrawAll(current) {
             redrawStones(current);
+            redrawNextMoves(current);
             redrawMarkup(current);
             redrawHover(current);
+        }
+
+        function redrawNextMoves(current) {
+            var group = besogo.svgEl("g"),
+                children = current.children,
+                i, move, x, y, color;
+
+            for (i = 0; i < children.length; i++) {
+                move = children[i].move;
+                if (move && move.x !== 0) { // Not a pass
+                    x = svgPos(move.x);
+                    y = svgPos(move.y);
+                    color = children[i].isOnCorrectPath ? "limegreen" : "red";
+                    group.appendChild(besogo.svgEl("circle", {
+                        cx: x,
+                        cy: y,
+                        r: 12,
+                        fill: color,
+                        opacity: 0.6
+                    }));
+                }
+            }
+
+            svg.replaceChild(group, nextMoveGroup);
+            nextMoveGroup = group;
         }
 
         // Initializes the SVG element and draws the board
@@ -2688,7 +2718,7 @@ besogo.makeGameRoot = function(sizeX, sizeY) {
         return (x - 1) * sizeY + (y - 1);
     }
 };
-// Load a parsed SGF object into a game state tree
+    // Load a parsed SGF object into a game state tree
 besogo.loadSgf = function(sgf, editor) {
     'use strict';
     var size = {
@@ -2702,6 +2732,7 @@ besogo.loadSgf = function(sgf, editor) {
     root = besogo.makeGameRoot(size.x, size.y);
 
     loadNodeTree(sgf, root); // Load the rest of game tree
+    markCorrectPaths(root); // Pre-pass to mark nodes on correct paths
     editor.loadRoot(root); // Load root into the editor
 
     // Loads the game tree
@@ -2721,6 +2752,20 @@ besogo.loadSgf = function(sgf, editor) {
         }
     }
 
+    function markCorrectPaths(node) {
+        let isCorrect = false;
+        if (node.children.length === 0) {
+            isCorrect = checkComment(node.comment) === 1;
+        } else {
+            for (let i = 0; i < node.children.length; i++) {
+                if (markCorrectPaths(node.children[i])) {
+                    isCorrect = true;
+                }
+            }
+        }
+        node.isOnCorrectPath = isCorrect;
+        return isCorrect;
+    }
     // Loads property into node
     function loadProp(node, prop) {
         var setupFunc = 'placeSetup',
