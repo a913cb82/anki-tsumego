@@ -462,17 +462,26 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
 
             if (minX > maxX || minY > maxY) return;
 
-            // Determine crop info before shifting
-            // If minX > 1, then left side is cropped (not a real edge)
-            // If maxX < originalSizeX, then right side is cropped
+            minX = Math.max(1, minX - 1);
+            minY = Math.max(1, minY - 1);
+            maxX = Math.min(originalSizeX, maxX + 1); 
+            maxY = Math.min(originalSizeY, maxY + 1);
+
+            if (minX - 1 < 4) minX = 1;
+            if (minY - 1 < 4) minY = 1;
+            if (originalSizeX - maxX < 4) maxX = originalSizeX;
+            if (originalSizeY - maxY < 4) maxY = originalSizeY;
+
+            // Determine crop info after padding
+            // If minX === 1, then left side is not cropped (it is the real edge)
             if (editor) {
                 var crop = {
                     left: minX === 1,
                     right: maxX === originalSizeX,
                     top: minY === 1,
                     bottom: maxY === originalSizeY,
-                    shiftX: Math.max(1, minX - 1) - 1,
-                    shiftY: Math.max(1, minY - 1) - 1,
+                    shiftX: minX - 1,
+                    shiftY: minY - 1,
                     originalSizeX: originalSizeX,
                     originalSizeY: originalSizeY
                 };
@@ -504,11 +513,6 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
 
                 editor.cropInfo = crop;
             }
-
-            minX = Math.max(1, minX - 1);
-            minY = Math.max(1, minY - 1);
-            maxX = maxX + 1; 
-            maxY = maxY + 1;
 
             var shiftX = minX - 1;
             var shiftY = minY - 1;
