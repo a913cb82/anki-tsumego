@@ -634,6 +634,21 @@ describe('back card deeper analysis', () => {
     );
   });
 
+  it('SGF labels render bare on back (no backing squares)', () => {
+    const { document, jsdomErrors } = loadCard('back', fixture('markup-labels'));
+    assert.deepEqual(jsdomErrors, [], 'no script errors');
+    const svg = boardSvg(document, 'backGo');
+    const texts = Array.from(svg.querySelectorAll('g:not([opacity]) text')).map(
+      (el) => el.textContent
+    );
+    assert.ok(texts.includes('A'), `SGF label renders, got: ${texts}`);
+    assert.equal(
+      svg.querySelectorAll('g:not([opacity]) rect[opacity="0.85"]').length,
+      0,
+      'label only, no backer'
+    );
+  });
+
   it('comment box shows the current node comment', async () => {
     const { window, document } = loadCard('back', fixture('corner-life'));
     assert.equal(backCommentText(document), '', 'setup has no comment');

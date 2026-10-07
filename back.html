@@ -978,11 +978,7 @@ function checkComment(comment) {
                                     element = besogo.svgBlock(x, y, color);
                                     break;
                             }
-                        } else { // Markup is a label
-                            if (!stone) { // If placing label on empty spot
-                                element = makeBacker(x, y);
-                                group.appendChild(element);
-                            }
+                        } else { // Markup is a label, bare (no backer)
                             element = besogo.svgLabel(x, y, color, mark);
                         }
                         group.appendChild(element);
@@ -1020,18 +1016,6 @@ function checkComment(comment) {
             svg.replaceChild(group, markupGroup); // Replace the markup group
             markupGroup = group;
         } // END function redrawMarkup
-
-        function makeBacker(x, y) { // Makes a label markup backer at (x, y)
-            return besogo.svgEl("rect", {
-                x: x - CELL_SIZE / 2,
-                y: y - CELL_SIZE / 2,
-                height: CELL_SIZE,
-                width: CELL_SIZE,
-                opacity: 0.85,
-                stroke: "none",
-                'class': 'besogo-svg-board'
-            });
-        }
 
         // Checks if (x, y) is in variants
         function checkVariants(variants, current, x, y) {
