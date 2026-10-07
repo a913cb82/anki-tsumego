@@ -1,0 +1,3 @@
+(;GM[1]FF[4]SZ[19]AB[aa][ab][ba]AW[bb][bc]
+(;B[cb]C[CORRECT - the vital point kills White. This is the standard shape: Black connects solidly along the edge, White has no eye space left, and any resistance just shortens the liberties. Remember to check the snapback first.])
+(;B[db]C[WRONG - this lets White live]))

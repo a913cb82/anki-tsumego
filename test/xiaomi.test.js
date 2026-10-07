@@ -237,13 +237,13 @@ describe('xiaomi 15 ultra portrait (ankidroid mock, 412x915)', () => {
     await page.close();
   });
 
-  it('front reserves the note space before solving', async (t) => {
-    const page = await load(t, 'corner-life', 0);
+  it('front reserves the real note space before solving', async (t) => {
+    const page = await load(t, 'long-note', 0);
     if (!page) return; // skipped
     const emptyH = await page.evaluate(
       () => document.querySelector('#content .besogo-comment').getBoundingClientRect().height
     );
-    assert.ok(emptyH >= 40, `note space reserved up front, got ${emptyH}`);
+    assert.ok(emptyH >= 80, `full note space reserved up front, got ${emptyH}`);
     await page.close();
   });
 
@@ -270,6 +270,40 @@ describe('xiaomi 15 ultra portrait (ankidroid mock, 412x915)', () => {
     assert.ok(
       Math.abs(after - before) <= 1,
       `board prepositioned, top ${before} -> ${after}`
+    );
+    await page.close();
+  });
+
+  it('front board does not move for a long leaf note', async (t) => {
+    const page = await load(t, 'long-note', 0);
+    if (!page) return; // skipped
+    const boardTop = () =>
+      page.evaluate(() => Math.round(document.querySelector('#frontGo .besogo-board').getBoundingClientRect().top));
+    const before = await boardTop();
+    await page.evaluate(() => {
+      const svg = document.querySelector('#frontGo svg');
+      const d = svg.querySelector('path.besogo-svg-lines').getAttribute('d');
+      const nums = d.match(/[\d.]+/g).map(Number);
+      const ys = [...new Set(nums.filter((_, i) => i % 2 === 1))].sort((a, b) => a - b);
+      const rects = [...svg.children].filter(
+        (el) => el.tagName.toLowerCase() === 'rect' && el.getAttribute('opacity') === '0'
+      );
+      rects[(3 - 1) * ys.length + (2 - 1)].dispatchEvent(
+        new MouseEvent('click', { bubbles: true, cancelable: true })
+      );
+    });
+    await page.waitForTimeout(500);
+    const noteH = await page.evaluate(
+      () => document.querySelector('#content .besogo-comment').getBoundingClientRect().height
+    );
+    assert.ok(noteH > 48, `long note overflows the 3em guess, got ${noteH}`);
+    // Any re-placement (resize, rotation) must keep the board put.
+    await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+    await page.waitForTimeout(300);
+    const after = await boardTop();
+    assert.ok(
+      Math.abs(after - before) <= 1,
+      `board prepositioned for the real note, top ${before} -> ${after}`
     );
     await page.close();
   });

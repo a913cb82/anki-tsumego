@@ -204,9 +204,40 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
                     placeCard(container);
                 };
                 window.addEventListener("resize", resizer);
+                reserveNoteSlot();
                 resizer(); // Initial div sizing
             } else if (options.resize === 'fixed') {
                 setDimensions(container.clientWidth, container.clientHeight);
+            }
+
+            // Reserve the note slot: measure this problem's longest leaf message
+            // (verdict + note + error count) so the board starts where it ends
+            // and never shifts when the text appears. Falls back to CSS min-height.
+            // Good-leaf test without checkComment's failure side effect
+            // (checkComment records red in solvedColour; measuring must not).
+            function isGoodLeaf(text) {
+            var upper = String(text).toUpperCase();
+            return upper.startsWith('CORRECT') || upper.startsWith('RIGHT');
+            }
+
+            function reserveNoteSlot() {
+            var msg = panelsDiv && panelsDiv.querySelector('.besogo-comment'),
+            stack = [editor.getRoot()], node, i, longest = '', text;
+            if (!msg) { return; }
+            while (stack.length) {
+                node = stack.pop();
+                if (node.children && node.children.length) {
+                    for (i = 0; i < node.children.length; i++) { stack.push(node.children[i]); }
+                } else if (node.comment) {
+                    text = node.comment;
+                    if (isGoodLeaf(text)) { text += '\nTotal Errors: 0'; }
+                    if (text.length > longest.length) { longest = text; }
+                }
+            }
+            if (!longest) { msg.style.minHeight = '0px'; return; }
+            msg.innerText = longest;
+            msg.style.minHeight = msg.clientHeight + 'px';
+            msg.innerText = '';
             }
 
             // Cropped board aspect (height / width) from the live board, if drawn.
