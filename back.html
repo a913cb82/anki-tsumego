@@ -8,6 +8,21 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
 var randVar = false;  // If Persistence is enabled, this setting is ignored.
 var probVar = 0;
 
+    // Fit the cropped board: full container width, unless the rows are the
+    // limiting factor — then shrink so board plus message fit the viewport
+    // with no scrolling. Same zoom as the front. Mirrors fitBoardSize in core.
+    function fitBoard(availW, aspect) {
+        var w = Math.min(availW, (window.innerHeight - 80) / aspect);
+        return { w: w, h: w * aspect };
+    }
+
+    // Center the board when the fit narrowed it; otherwise stylesheet margins.
+    function placeBoardNarrowed(boardDiv, fitW, availW) {
+        var narrow = (fitW < availW - 1) ? 'auto' : '';
+        boardDiv.style.marginLeft = narrow;
+        boardDiv.style.marginRight = narrow;
+    }
+
 var solvedColour = "limegreen"; // If Persistence is enabled, this setting is ignored.
 
 if (Persistence.isAvailable()) {
@@ -192,8 +207,10 @@ function checkComment(comment) {
                 }
             } else { // Portrait mode (implied if height is missing)
                 container.style['flex-direction'] = 'column';
-                boardDiv.style.height = ((width - 12) * boardAspect()) + 'px'; // Hug the cropped board
-                boardDiv.style.width = (width - 12) + 'px';
+                var fit = fitBoard(width - 12, boardAspect());
+                boardDiv.style.height = fit.h + 'px'; // Hug the cropped board, rows may limit
+                boardDiv.style.width = fit.w + 'px';
+                placeBoardNarrowed(boardDiv, fit.w, width - 12);
                 if (panelsDiv) {
                     if (height) { // Only set height if param present
                         panelsDiv.style.height = (height - width) + 'px';
@@ -683,7 +700,11 @@ function checkComment(comment) {
             });
 
         svg.appendChild(makeBoardBackground(boardWidth, boardHeight)); // Wood background
-        container.style.height = (container.clientWidth * boardHeight / boardWidth) + 'px'; // Hug the cropped board, never square
+        var availW = container.clientWidth,
+            fit = fitBoard(availW, boardHeight / boardWidth);
+        container.style.width = fit.w + 'px';
+        container.style.height = fit.h + 'px'; // Hug the cropped board, never square
+        placeBoardNarrowed(container, fit.w, availW);
 
         // Wood background, rounded only on true board-edge corners.
         // Cropped (open) edges stay sharp. Proportion matches go-trainer.

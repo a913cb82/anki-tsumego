@@ -21,6 +21,7 @@ try {
 
 const root = path.join(__dirname, '..');
 const FRONT = fs.readFileSync(path.join(root, 'front.html'), 'utf8');
+const BACK = fs.readFileSync(path.join(root, 'back.html'), 'utf8');
 const CSS = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
 let http = null;
 try {
@@ -38,15 +39,14 @@ function fixture(name) {
   return fs.readFileSync(path.join(root, 'test', 'fixtures', `${name}.sgf`), 'utf8').trim();
 }
 
-function ankidroidPage(sgf) {
-  const html = FRONT.replace('{{text:SGF}}', sgf).replace('{{SGF}}', sgf);
+function ankidroidPage(cardHtml) {
   return (
     '<!DOCTYPE html><html><head><meta charset="utf-8"><style>' +
     DROID_CSS +
     '</style><style>' +
     CSS +
     '</style></head><body class="night_mode"><div id="content" dir="auto">' +
-    html +
+    cardHtml +
     '</div></body></html>'
   );
 }
@@ -66,9 +66,15 @@ describe('xiaomi 15 ultra portrait (ankidroid mock, 412x915)', () => {
     }
     // localhost origin so the card's sessionStorage seeding works.
     server = http.createServer((req, res) => {
-      const name = new URL(req.url, 'http://x').searchParams.get('fixture') || 'corner-life';
+      const params = new URL(req.url, 'http://x').searchParams;
+      const name = params.get('fixture') || 'corner-life';
+      const sgf = fixture(name);
+      const card =
+        params.get('side') === 'back'
+          ? BACK.replace('{{SGF}}', sgf)
+          : FRONT.replace('{{text:SGF}}', sgf).replace('{{SGF}}', sgf);
       res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(ankidroidPage(fixture(name)));
+      res.end(ankidroidPage(card));
     });
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
     baseUrl = `http://127.0.0.1:${server.address().port}/`;
@@ -79,30 +85,45 @@ describe('xiaomi 15 ultra portrait (ankidroid mock, 412x915)', () => {
     if (server) await new Promise((resolve) => server.close(resolve));
   });
 
+  // Seed the session like a device where the front ran first (it stores
+  // rnd=true and the orientation var the back then reuses).
+  async function seedSession(page, seedVar) {
+    await page.addInitScript((v) => {
+      sessionStorage.setItem('github.com/SimonLammer/anki-persistence/rnd', 'true');
+      sessionStorage.setItem('github.com/SimonLammer/anki-persistence/var', String(v));
+    }, seedVar);
+  }
+
   async function load(t, sgfName, seedVar) {
     if (!browser) return t.skip('playwright chromium not installed');
     const page = await browser.newPage({ viewport: { width: 412, height: 915 } });
-    if (seedVar !== undefined) {
-      await page.addInitScript((v) => {
-        sessionStorage.setItem('github.com/SimonLammer/anki-persistence/var', String(v));
-      }, seedVar);
-    }
+    if (seedVar !== undefined) await seedSession(page, seedVar);
     await page.goto(`${baseUrl}?fixture=${sgfName}`);
     await page.waitForTimeout(600);
     return page;
   }
 
-  async function boardBox(page) {
-    return page.evaluate(() => {
-      const board = document.querySelector('#frontGo .besogo-board');
+  async function boardBox(page, goId = '#frontGo') {
+    return page.evaluate((sel) => {
+      const board = document.querySelector(`${sel} .besogo-board`);
       const r = board.getBoundingClientRect();
       return {
         top: r.top,
         bottom: r.bottom,
+        width: r.width,
         height: r.height,
         viewport: window.innerHeight,
       };
-    });
+    }, goId);
+  }
+
+  async function loadBack(t, sgfName, seedVar) {
+    if (!browser) return t.skip('playwright chromium not installed');
+    const page = await browser.newPage({ viewport: { width: 412, height: 915 } });
+    if (seedVar !== undefined) await seedSession(page, seedVar);
+    await page.goto(`${baseUrl}?side=back&fixture=${sgfName}`);
+    await page.waitForTimeout(600);
+    return page;
   }
 
   it('tall crop fits on screen: no top gap, no scroll needed', async (t) => {
@@ -128,6 +149,36 @@ describe('xiaomi 15 ultra portrait (ankidroid mock, 412x915)', () => {
       `whole board visible without scrolling, bottom=${box.bottom} viewport=${box.viewport}`
     );
     await page.close();
+  });
+
+  it('back zoom matches front zoom on the same tall crop', async (t) => {
+    let seed = null;
+    let frontBox = null;
+    for (let v = 0; v < 8; v++) {
+      const p = await load(t, 'side-capture', v);
+      if (!p) return; // skipped
+      const b = await boardBox(p);
+      if (b.height > b.viewport * 0.9) {
+        seed = v;
+        frontBox = b;
+        await p.close();
+        break;
+      }
+      await p.close();
+    }
+    assert.ok(seed !== null, 'found a tall orientation');
+    const back = await loadBack(t, 'side-capture', seed);
+    if (!back) return; // skipped
+    const backBox = await boardBox(back, '#backGo');
+    assert.ok(
+      Math.abs(backBox.width - frontBox.width) <= 2,
+      `same zoom, front w=${frontBox.width} back w=${backBox.width}`
+    );
+    assert.ok(
+      Math.abs(backBox.height - frontBox.height) <= 2,
+      `same zoom, front h=${frontBox.height} back h=${backBox.height}`
+    );
+    await back.close();
   });
 
   it('short crop is vertically centred', async (t) => {
