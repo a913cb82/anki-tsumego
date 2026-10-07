@@ -15,7 +15,7 @@ This works with SGF from [ogs-to-anki](https://github.com/a913cb82/ogs-to-anki).
 - **Solution Highlighting**: The analysis tree on the back highlights all paths leading to a correct solution (comments starting with "CORRECT" or "RIGHT"), with a thicker outline for correct leaf nodes.
 - **Next Move Indicators**: When exploring on the back board, possible next moves are marked with colored indicators (limegreen for correct paths, red for failures).
 - **Interactive Analysis**: Full analysis board on the backside to explore variations.
-- **Mistake Tracking**: Changes the board border color to indicate mistakes based on SGF comments ("INCORRECT", "WRONG", "FAIL").
+- **Mistake Tracking**: Counts mistakes toward the error total and auto-reveals the move after 3 (see `handicap`), based on SGF comments ("INCORRECT", "WRONG", "FAIL").
 - **Completion Feedback**: Displays leaf node comments and the total error count upon solving a problem on the front card.
 - **Cross-Platform**: Works offline on Anki Desktop and Ankidroid (iOS likely supported).
 - **No Addons Required**: Pure HTML/JS/CSS implementation.
@@ -34,21 +34,53 @@ This works with SGF from [ogs-to-anki](https://github.com/a913cb82/ogs-to-anki).
 3. **Back Template**: Paste the content of `back.html`.
 4. **Styling**: Paste the content of `style.css`.
 
-### 3. Media Files (Optional)
-If you want to use realistic stone images:
-1. Set `var realstones = true;` in the scripts.
-2. Download the media assets from the original [TowelSniffer/Anki-go](https://github.com/TowelSniffer/Anki-go) repository.
-3. Place the images in your Anki `collection.media` folder.
-
 ## Customization
 
 You can find these variables near the top of the `<script>` blocks in `front.html` and `back.html`:
 
 - `var randVar = true;`: Enable/disable random variations (flips/rotations).
-- `var goFirst = true;`: Set to `true` to start from the first move of the SGF, or `false` to start after the first move (often useful to see the opponent's "last" move).
-- `var realstones = false;`: Toggle between SVG stones and realistic stone images.
 - `var handicap = 3;`: The number of mistakes allowed before the next correct move is shown automatically.
 
 ## Usage
 
 When adding a card, simply paste the raw SGF text of your Go problem into the `SGF` field. Ensure your SGF comments use "CORRECT" or "RIGHT" to mark solution leaves, and "INCORRECT", "WRONG", or "FAIL" to mark failure branches.
+
+## Development (tests + card sources)
+
+The Anki workflow above is unchanged: `front.html` / `back.html` stay
+paste-ready, single-file, dependency-free templates. They are **generated**
+from `src/` so card logic can be tested:
+
+```
+src/shared/persistence.html  # Anki persistence shim (shared by both sides)
+src/front/config.html        # front settings + mistake/completion glue
+src/front/div.html           # <div id=frontGo>{{text:SGF}}</div>
+src/front/main.html          # board engine + front interaction
+src/back/div.html            # <div id="backGo">{{SGF}}</div>
+src/back/main.html           # board engine + back analysis highlighting
+src/core/tsumego.js          # pure, testable mirror of the card rules
+                             # (comment markers, auto-crop, probVar flips,
+                             # colour normalisation)
+```
+
+```sh
+npm install   # dev-only (jsdom for card tests); never ships to Anki
+npm test        # 58 tests: unit + build + real card flows in a DOM
+node build.mjs  # regenerate front.html / back.html after editing src/
+```
+
+Loop: edit `src/` -> `npm test` -> `node build.mjs` -> paste into Anki and
+preview. `node build.mjs --check` fails if the committed html is stale
+(use it in CI). The build is byte-identical for unchanged sources, so
+diffs on `front.html` / `back.html` always reflect real behaviour changes.
+
+`test/` holds example tsumego SGFs (`test/fixtures/*.sgf`: corner, side,
+center, white-to-move, 9x9, full-board) plus three suites:
+
+- `test/core.test.js` — rules in isolation (zero dependencies).
+- `test/card-flows.test.js` — user flows through the **real cards**:
+  cropped sizes, open edges, stone placement, colour swap, all 8 random
+  variations, front solve/mistake flows (real clicks), Persistence
+  front-to-back carry-over, back next-move indicators + tree highlighting.
+- `test/build.test.js` — generated html stays paste-ready (placeholders
+  intact, no modules/externals) and in sync with `src/`.

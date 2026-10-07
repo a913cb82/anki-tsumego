@@ -1,0 +1,39 @@
+<script>
+    var randVar = true;  // Set to true to enable random variations on all problems.
+    var probVar = 0;
+    var first2move = 0;
+    var errorCount = 0; // trackes mistakes
+    var totalErrorCount = 0; // tracks total mistakes
+    var handicap = 3; // how many mistakes can be made before next move is made automatically
+    var initTracker = 0; // tracks if board has been initiated
+    var solvedState = false; // tracks if puzzle is solved
+    
+    
+    if (Persistence.isAvailable()) {
+        Persistence.setItem("rnd", randVar);
+        if (randVar) {
+            probVar = Persistence.getItem("var");
+            if (probVar == null) {
+                probVar = Math.floor(Math.random()*8);
+                Persistence.setItem("var", probVar);
+            };
+        }
+    }
+    
+    function checkComment(comment) {
+        const goodAnswers = ["CORRECT", "RIGHT"];
+        const badAnswers = ["INCORRECT", "WRONG", "FAIL"];
+        if (!comment) return 0;
+        for (let answer of goodAnswers) {
+            if (comment.toUpperCase().startsWith(answer)) {
+                return(1);
+            }
+        };
+        for (let answer of badAnswers) {
+            if (comment.toUpperCase().startsWith(answer)) {
+                return(-1);
+            }
+        };
+        return(0);
+    }
+</script>

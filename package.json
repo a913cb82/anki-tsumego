@@ -1,0 +1,15 @@
+{
+  "name": "anki-tsumego",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Anki Go/Tsumego note type with testable card logic",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "build": "node build.mjs",
+    "build:check": "node build.mjs --check"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.2"
+  }
+}
