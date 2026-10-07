@@ -1046,7 +1046,6 @@ function checkComment(comment) {
             var element,
                 move, // Variant move
                 label, // Variant label
-                stone, // Stone state
                 i, x, y; // Scratch iteration variables
 
             for (i = 0; i < variants.length; i++) {
@@ -1054,14 +1053,9 @@ function checkComment(comment) {
                     move = variants[i].move;
                     // Check if move, not a pass, and no mark yet
                     if (move && move.x !== 0 && !markupLayer[fromXY(move.x, move.y)]) {
-                        stone = current.getStone(move.x, move.y);
                         x = svgPos(move.x); // Get SVG positions
                         y = svgPos(move.y);
-                        if (!stone) { // If placing label on empty spot
-                            element = makeBacker(x, y);
-                            group.appendChild(element);
-                        }
-                        // Label variants with letters A-Z cyclically
+                        // Label variants with letters A-Z cyclically, bare (no backer)
                         label = String.fromCharCode('A'.charCodeAt(0) + (i % 26));
                         element = besogo.svgLabel(x, y, besogo.LRED, label);
                         group.appendChild(element);

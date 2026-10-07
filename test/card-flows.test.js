@@ -573,6 +573,21 @@ describe('back card deeper analysis', () => {
     assert.deepEqual(dots(), { good: 1, bad: 1 }, 'after White');
   });
 
+  it('variant letters render bare (no backing squares)', () => {
+    const { document, jsdomErrors } = loadCard('back', fixture('deeper-tree'));
+    assert.deepEqual(jsdomErrors, [], 'no script errors');
+    const svg = boardSvg(document, 'backGo');
+    const letters = Array.from(svg.querySelectorAll('g:not([opacity]) text')).map(
+      (el) => el.textContent
+    );
+    assert.ok(letters.length > 0, `variant letters render, got: ${letters}`);
+    assert.equal(
+      svg.querySelectorAll('g:not([opacity]) rect[opacity="0.85"]').length,
+      0,
+      'letters only, no backers'
+    );
+  });
+
   it('comment box shows the current node comment', async () => {
     const { window, document } = loadCard('back', fixture('corner-life'));
     assert.equal(backCommentText(document), '', 'setup has no comment');
