@@ -20,9 +20,13 @@ html, body, #qa, #content {
   max-width: min(700px, 100vw, 100vh);
 	height:100vh !important;
 	max-height: min(700px, 100vw, 100vh);
+  margin-top: auto;
+  margin-bottom: auto;
 }
 #backGo {
 	width: min(100vw, 1400px) !important;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
 .besogo-comment>input {
@@ -177,6 +181,8 @@ html, body, #qa, #content {
 
 .besogo-board {
   margin: 6px;
+  margin-top: auto;
+  margin-bottom: auto;
   background: #E8C07A;
 }
 
