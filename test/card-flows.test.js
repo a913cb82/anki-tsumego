@@ -213,9 +213,10 @@ describe('front card solving flow (corner problem)', () => {
     assert.deepEqual(jsdomErrors, [], 'no script errors on load');
     await clickPoint(window, 'frontGo', 3, 2); // B[cb] CORRECT leaf
     assert.deepEqual(jsdomErrors, [], 'no script errors while solving');
+    assert.equal(window.Persistence.getItem('solvedColour'), 'limegreen');
     const board = boardChrome(document, 'frontGo');
-    assert.equal(board.style.borderColor, '', 'solved: no state border');
-    assert.equal(board.style.boxShadow, '', 'solved: no state glow');
+    assert.equal(board.style.borderColor, 'limegreen', 'solved: green border');
+    assert.ok(board.style.boxShadow.includes('limegreen'), 'solved: green glow');
     const msg = frontMessageText(document);
     assert.ok(msg.includes('CORRECT'), `shows leaf comment, got: ${msg}`);
     assert.ok(msg.includes('Total Errors: 0'), `counts errors, got: ${msg}`);
@@ -227,17 +228,16 @@ describe('front card solving flow (corner problem)', () => {
     const msg = frontMessageText(document);
     assert.ok(msg.includes('WRONG'), `shows leaf comment, got: ${msg}`);
     assert.ok(!msg.includes('Total Errors'), `no error total on failure, got: ${msg}`);
+    assert.equal(window.Persistence.getItem('solvedColour'), '#b31010');
     const board = boardChrome(document, 'frontGo');
-    assert.equal(board.style.borderColor, '', 'failure: no state border');
-    assert.equal(board.style.boxShadow, '', 'failure: no state glow');
+    assert.equal(board.style.borderColor, 'rgb(179, 16, 16)', 'wrong leaf shows the red failure border');
   });
 
   it('unlisted move counts as a mistake and stays on the problem', async () => {
     const { window, document } = loadCard('front', fixture('corner-life'));
     await clickPoint(window, 'frontGo', 5, 4); // empty point, no variation
     assert.equal(frontMessageText(document), '', 'still on the problem');
-    const board = boardChrome(document, 'frontGo');
-    assert.equal(board.style.borderColor, '', 'mistake: no state border');
+    assert.equal(window.Persistence.getItem('solvedColour'), '#b31010');
     // board unchanged: still the setup stones
     assert.deepEqual(stoneCounts(boardSvg(document, 'frontGo')), { black: 3, white: 2 });
   });
@@ -262,7 +262,7 @@ describe('front card random variations', () => {
 });
 
 describe('back card analysis board', () => {
-  const seed = { rnd: true, var: 0 };
+  const seed = { solvedColour: 'limegreen', rnd: true, var: 0 };
 
   it('renders the same cropped position as the front', () => {
     const { document, jsdomErrors } = loadCard('back', fixture('corner-life'), {
@@ -291,12 +291,11 @@ describe('back card analysis board', () => {
     assert.equal(tree.querySelectorAll('circle[stroke="limegreen"][stroke-width="16"]').length, 1);
   });
 
-  it('reads the persisted variation and shows no state border', () => {
+  it('carries the front result over via Persistence (green border)', () => {
     const { document } = loadCard('back', fixture('corner-life'), { seedPersistence: seed });
     assert.deepEqual(boardSize(boardSvg(document, 'backGo')), { x: 5, y: 4 });
-    const board = boardChrome(document, 'backGo');
-    assert.equal(board.style.border, '', 'no state border');
-    assert.equal(board.style.boxShadow, '', 'no state glow');
+    const border = document.querySelector('#backGo .besogo-board').style.border;
+    assert.ok(border.includes('limegreen'), `border shows result, got: ${border}`);
   });
 
   it('works with no stored Persistence (first visit)', () => {
@@ -317,6 +316,18 @@ describe('front card multi-move solve and handicap (deeper tree)', () => {
     const msg = frontMessageText(document);
     assert.ok(msg.includes('CORRECT'), `shows leaf comment, got: ${msg}`);
     assert.ok(msg.includes('Total Errors: 0'), `counts errors, got: ${msg}`);
+  });
+
+  it('finishing after mistakes keeps the red failure border', async () => {
+    const { window, document } = loadCard('front', fixture('corner-life'));
+    await clickPoint(window, 'frontGo', 5, 4); // mistake 1: empty point
+    await clickPoint(window, 'frontGo', 5, 3); // mistake 2
+    await clickPoint(window, 'frontGo', 5, 1); // mistake 3 -> auto-reveals B[cb] leaf
+    const msg = frontMessageText(document);
+    assert.ok(msg.includes('Total Errors: 3'), `counts all mistakes, got: ${msg}`);
+    const board = boardChrome(document, 'frontGo');
+    assert.equal(board.style.borderColor, 'rgb(179, 16, 16)', 'failure recorded despite correct finish');
+    assert.equal(window.Persistence.getItem('solvedColour'), '#b31010');
   });
 
   it('three mistakes trigger the handicap auto-reveal', async () => {
@@ -362,6 +373,18 @@ describe('what the user sees on the board', () => {
     const rings = svg.querySelectorAll('g:not([opacity]) circle[r="27"][fill="none"]');
     assert.equal(rings.length, 1, 'CR markup ring renders outside the stone groups');
     assert.equal(svg.querySelectorAll('g:not([opacity]) rect[opacity="0.85"]').length, 1, 'LB backer');
+  });
+
+  it('board viewport follows the crop aspect (no square letterbox)', () => {
+    for (const side of ['front', 'back']) {
+      const boardId = side === 'front' ? 'frontGo' : 'backGo';
+      const { document } = loadCard(side, fixture('corner-life'));
+      const svg = boardSvg(document, boardId);
+      assert.equal(svg.getAttribute('viewBox'), '0 0 452 364');
+      assert.equal(svg.style.height, 'auto', `${side} viewport height follows the crop`);
+      const board = document.querySelector(`#${boardId} .besogo-board`);
+      assert.ok(board.style.height !== '', `${side} board div owns its cropped height`);
+    }
   });
 
   it('wood, grid and hoshi match the go-trainer palette', () => {
@@ -538,11 +561,15 @@ describe('back card deeper analysis', () => {
     const front = loadCard('front', fixture('corner-life'));
     await clickPoint(front.window, 'frontGo', 3, 2); // solve on the front
     const seed = {
+      solvedColour: front.window.Persistence.getItem('solvedColour'),
       rnd: front.window.Persistence.getItem('rnd'),
       var: front.window.Persistence.getItem('var'),
     };
+    assert.equal(seed.solvedColour, 'limegreen');
     const back = loadCard('back', fixture('corner-life'), { seedPersistence: seed });
     assert.deepEqual(boardSize(boardSvg(back.document, 'backGo')), { x: 5, y: 4 });
+    const border = back.document.querySelector('#backGo .besogo-board').style.border;
+    assert.ok(border.includes('limegreen'), `border shows result, got: ${border}`);
   });
 });
 

@@ -8,8 +8,8 @@
 // In Node it exports via module.exports (guarded).
 
 // --- comment classification (mirrors checkComment, minus the front-only
-// (The old front checkComment also tinted the board border on failure;
-// that state signaling was removed, so this stays pure.) ---
+// (The card glue also records failures in the board border via
+// solvedColour/Persistence; that side effect stays there.) ---
 // Returns 1 for solution leaves, -1 for failure leaves, 0 otherwise.
 function classifyComment(comment) {
   const goodAnswers = ['CORRECT', 'RIGHT'];

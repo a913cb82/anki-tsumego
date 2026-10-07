@@ -56,7 +56,7 @@ describe('build pipeline (Anki paste-ready output)', () => {
       'numberToLetter', 'drawCoords', 'drawStyleButtons', 'updateStyleButtons',
       'toggleVariantStyle', 'toggleCoordStyle', 'getCoordStyle', 'setCoordStyle',
       'COORD_MARGIN', 'msg.coord', 'options.coord', 'realstones', 'REAL_STONES', 'goFirst',
-      'solvedColour', 'boxShadow', 'borderColor', '#0165fc', '#9a0eea', 'besogo.BLUE', 'besogo.PURP',
+      '#0165fc', '#9a0eea', 'besogo.BLUE', 'besogo.PURP',
       'randomizeIndex', 'realStone', 'svgShadow', 'BLACK_STONES',
     ];
     const deadFrontOnly = [

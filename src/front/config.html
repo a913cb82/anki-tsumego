@@ -7,9 +7,11 @@
     var handicap = 3; // how many mistakes can be made before next move is made automatically
     var initTracker = 0; // tracks if board has been initiated
     var solvedState = false; // tracks if puzzle is solved
+    var solvedColour = "limegreen"; // controls end border colour
     
     
     if (Persistence.isAvailable()) {
+        Persistence.setItem("solvedColour", solvedColour);
         Persistence.setItem("rnd", randVar);
         if (randVar) {
             probVar = Persistence.getItem("var");
@@ -31,6 +33,8 @@
         };
         for (let answer of badAnswers) {
             if (comment.toUpperCase().startsWith(answer)) {
+                solvedColour = "#b31010";
+                if (Persistence.isAvailable()) { Persistence.setItem("solvedColour", solvedColour); };
                 return(-1);
             }
         };

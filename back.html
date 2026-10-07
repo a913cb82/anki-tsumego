@@ -8,8 +8,10 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
 var randVar = false;  // If Persistence is enabled, this setting is ignored.
 var probVar = 0;
 
+var solvedColour = "limegreen"; // If Persistence is enabled, this setting is ignored.
 
 if (Persistence.isAvailable()) {
+    solvedColour = Persistence.getItem("solvedColour");
     randVar = Persistence.getItem("rnd");
     if (randVar) {
         probVar = Persistence.getItem("var");
@@ -169,6 +171,18 @@ function checkComment(comment) {
             setDimensions(container.clientWidth, container.clientHeight);
         }
 
+        // Cropped board aspect (height / width) from the live board, if drawn.
+        // The resizer runs before the first board loads, so 1 (square) until then.
+        function boardAspect() {
+        var svg = boardDiv.querySelector('svg'),
+        box;
+        if (!svg) {
+        return 1;
+        }
+        box = (svg.getAttribute('viewBox') || '').split(' ');
+        return (box.length === 4 && +box[2] > 0) ? (+box[3] / +box[2]) : 1;
+        }
+
         // Sets dimensions with optional height param
         function setDimensions(width, height) {
             if (height && width > height) { // Landscape mode
@@ -181,7 +195,7 @@ function checkComment(comment) {
                 }
             } else { // Portrait mode (implied if height is missing)
                 container.style['flex-direction'] = 'column';
-                boardDiv.style.height = (width - 12) + 'px';
+                boardDiv.style.height = ((width - 12) * boardAspect()) + 'px'; // Hug the cropped board
                 boardDiv.style.width = (width - 12) + 'px';
                 if (panelsDiv) {
                     if (height) { // Only set height if param present
@@ -667,11 +681,12 @@ function checkComment(comment) {
 
             svg = besogo.svgEl("svg", { // Initialize the SVG element
                 width: "100%",
-                height: "100%",
-                viewBox: "0 0 " + boardWidth + " " + boardHeight
+                viewBox: "0 0 " + boardWidth + " " + boardHeight,
+                style: "height: auto;" // Viewport follows the crop aspect, never square
             });
 
         svg.appendChild(makeBoardBackground(boardWidth, boardHeight)); // Wood background
+        container.style.height = (container.clientWidth * boardHeight / boardWidth) + 'px'; // Hug the cropped board, never square
 
         // Wood background, rounded only on true board-edge corners.
         // Cropped (open) edges stay sharp. Proportion matches go-trainer.
@@ -3386,5 +3401,8 @@ besogo.makeTreePanel = function(container, editor) {
 besogo.autoInit();
 
 
+
+document.getElementsByClassName("besogo-board")[0].style.border = "max(0.7vmin, 6px) solid " + solvedColour;
+document.getElementsByClassName("besogo-board")[0].style.boxShadow ="0px 0px 6px 0px " + solvedColour;
 
 </script>

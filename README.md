@@ -15,7 +15,7 @@ This works with SGF from [ogs-to-anki](https://github.com/a913cb82/ogs-to-anki).
 - **Solution Highlighting**: The analysis tree on the back highlights all paths leading to a correct solution (comments starting with "CORRECT" or "RIGHT"), with a thicker outline for correct leaf nodes.
 - **Next Move Indicators**: When exploring on the back board, possible next moves are marked with colored indicators (limegreen for correct paths, red for failures).
 - **Interactive Analysis**: Full analysis board on the backside to explore variations.
-- **Mistake Tracking**: Counts mistakes toward the error total and auto-reveals the move after 3 (see `handicap`), based on SGF comments ("INCORRECT", "WRONG", "FAIL").
+- **Mistake Tracking**: Changes the board border color to indicate mistakes based on SGF comments ("INCORRECT", "WRONG", "FAIL"). Once red it stays red through completion, and the result carries to the back card.
 - **Completion Feedback**: Displays leaf node comments and the total error count upon solving a problem on the front card.
 - **Cross-Platform**: Works offline on Anki Desktop and Ankidroid (iOS likely supported).
 - **No Addons Required**: Pure HTML/JS/CSS implementation.
