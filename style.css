@@ -26,6 +26,9 @@ html, body, #qa, #content {
 #frontGo .besogo-panels {
   height: auto !important; /* buttons hidden: hug the message line, never spacer */
 }
+#frontGo .besogo-comment {
+  min-height: 3em; /* keep the note slot: board prepositioned, no shift on solve */
+}
 #backGo {
 	width: min(100vw, 1400px) !important;
   margin-top: auto;

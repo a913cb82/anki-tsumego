@@ -38,6 +38,11 @@ describe('vertical centering (safe: hugs top when overflowing)', () => {
     assert.ok(body.includes('height: auto'), 'no spacer above the board, note stays visible');
   });
 
+  it('front reserves the note space so the board never shifts', () => {
+    const body = ruleBody('#frontGo .besogo-comment');
+    assert.ok(body.includes('min-height'), 'message slot kept even when empty');
+  });
+
   it('#frontGo hugs content instead of forcing viewport height', () => {
     const body = ruleBody('#frontGo');
     assert.ok(!body.includes('height:100vh'), 'no forced viewport height (breaks tall crops)');
