@@ -28,6 +28,16 @@ describe('vertical centering (safe: hugs top when overflowing)', () => {
     assert.ok(body.includes('margin-bottom: auto'), 'front bottom margin auto');
   });
 
+  it('#frontGo hugs content instead of forcing viewport height', () => {
+    const body = ruleBody('#frontGo');
+    assert.ok(!body.includes('height:100vh'), 'no forced viewport height (breaks tall crops)');
+  });
+
+  it('#qa safe-centers rows (top when scrolling is needed)', () => {
+    const body = ruleBody('#qa');
+    assert.ok(body.includes('align-content: safe center'), 'card + message centered, top on overflow');
+  });
+
   it('#backGo safe-centers in the Anki #qa grid', () => {
     const body = ruleBody('#backGo');
     assert.ok(body.includes('margin-top: auto'), 'back top margin auto');

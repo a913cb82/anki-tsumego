@@ -13,13 +13,12 @@ html, body, #qa, #content {
   width: 100vw;
   display: grid;
   place-items: center;
+  align-content: safe center;
 }
 
 #frontGo {
 	width: 100vw !important;
   max-width: min(700px, 100vw, 100vh);
-	height:100vh !important;
-	max-height: min(700px, 100vw, 100vh);
   margin-top: auto;
   margin-bottom: auto;
 }
