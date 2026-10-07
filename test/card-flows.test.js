@@ -588,6 +588,52 @@ describe('back card deeper analysis', () => {
     );
   });
 
+  it('CR on the last move yields to the contrast ring (front)', async () => {
+    const { window, document, jsdomErrors } = loadCard('front', fixture('cr-lastmove'), {
+      seedPersistence: { rnd: true, var: 0 },
+    });
+    assert.deepEqual(jsdomErrors, [], 'no script errors on load');
+    document
+      .querySelector('[title="Next node"]')
+      .dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
+    await new Promise((r) => setTimeout(r, 400));
+    assert.deepEqual(jsdomErrors, [], 'no script errors while navigating');
+    const svg = boardSvg(document, 'frontGo');
+    assert.equal(
+      svg.querySelectorAll('g:not([opacity]) circle[r="17.6"]').length,
+      1,
+      'go-trainer ring marks the last move'
+    );
+    assert.equal(
+      svg.querySelectorAll('g:not([opacity]) circle[r="27"]').length,
+      0,
+      'no CR circle on the last move'
+    );
+  });
+
+  it('CR on the last move yields to the contrast ring (back)', async () => {
+    const { window, document, jsdomErrors } = loadCard('back', fixture('cr-lastmove'), {
+      seedPersistence: { rnd: true, var: 0 },
+    });
+    assert.deepEqual(jsdomErrors, [], 'no script errors on load');
+    const evt = new window.KeyboardEvent('keydown', { bubbles: true, cancelable: true });
+    Object.defineProperty(evt, 'keyCode', { value: 39 }); // right: next node
+    document.querySelector('#backGo').dispatchEvent(evt);
+    await new Promise((r) => setTimeout(r, 400));
+    assert.deepEqual(jsdomErrors, [], 'no script errors while navigating');
+    const svg = boardSvg(document, 'backGo');
+    assert.equal(
+      svg.querySelectorAll('g:not([opacity]) circle[r="17.6"]').length,
+      1,
+      'go-trainer ring marks the last move'
+    );
+    assert.equal(
+      svg.querySelectorAll('g:not([opacity]) circle[r="46"]').length,
+      0,
+      'no CR circle on the last move'
+    );
+  });
+
   it('comment box shows the current node comment', async () => {
     const { window, document } = loadCard('back', fixture('corner-life'));
     assert.equal(backCommentText(document), '', 'setup has no comment');

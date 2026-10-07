@@ -975,6 +975,12 @@ if(void 0===window.Persistence){var _persistenceKey="github.com/SimonLammer/anki
                         x = svgPos(i);
                         y = svgPos(j);
                         stone = current.getStone(i, j);
+                        if (mark === 1 && stone && lastMove && lastMove.x !== 0 &&
+                            lastMove.x === i && lastMove.y === j) {
+                            continue; // Bare CR on the last move is editor noise
+                            // (CGoban auto-marks it); the go-trainer contrast
+                            // ring below takes precedence. Other marks keep theirs.
+                        }
                         color = (stone === -1) ? "white" : "black"; // White on black
                         if (typeof mark === 'number') { // Markup is a basic shape
                             switch (mark) {

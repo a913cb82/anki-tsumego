@@ -944,6 +944,12 @@ function checkComment(comment) {
                         x = svgPos(i);
                         y = svgPos(j);
                         stone = current.getStone(i, j);
+                        if (mark === 1 && stone && lastMove && lastMove.x !== 0 &&
+                            lastMove.x === i && lastMove.y === j) {
+                            continue; // Bare CR on the last move is editor noise
+                            // (CGoban auto-marks it); the go-trainer contrast
+                            // ring below takes precedence. Other marks keep theirs.
+                        }
                         color = (stone === -1) ? "white" : "black"; // White on black
                         if (checkVariants(variants, current, i, j)) {
                             color = besogo.RED; // Natural variant marks are red
