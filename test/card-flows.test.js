@@ -503,6 +503,15 @@ describe('what the user sees on the board', () => {
     assert.equal(r.getAttribute('stroke'), '#FFFFFF', 'white ring on black');
   });
 
+  it('tree background stays transparent (never the wood fill)', () => {
+    const { document } = loadCard('back', fixture('corner-life'), { seedPersistence: { rnd: true, var: 0 } });
+    const tree = document.querySelector('#backGo .besogo-tree');
+    const bg = tree.querySelector('rect');
+    assert.ok(bg, 'tree paints a background rect');
+    assert.notEqual(bg.getAttribute('class'), 'besogo-svg-board', 'tree bg must not share the board paint');
+    assert.equal(bg.getAttribute('fill'), 'none', 'tree bg transparent like the original');
+  });
+
   it('grey tree icons stay flat discs', () => {
     const { document } = loadCard('back', fixture('corner-life'), { seedPersistence: { rnd: true, var: 0 } });
     const tree = document.querySelector('#backGo .besogo-tree');
@@ -530,9 +539,14 @@ describe('what the user sees on the board', () => {
     assert.equal(front.querySelectorAll('#frontGo .besogo-comment').length, 1, 'only the message line');
     assert.ok(front.querySelector('[title="Next node"]'), 'automation buttons exist');
     const back = loadCard('back', fixture('corner-life')).document;
-    for (const panel of ['control', 'names', 'comment', 'tool', 'tree']) {
-      assert.ok(back.querySelector(`#backGo .besogo-${panel}`), `back has ${panel}`);
+    for (const panel of ['comment', 'tree']) {
+      assert.ok(back.querySelector(`#backGo .besogo-${panel}`), `back keeps ${panel}`);
     }
+    for (const panel of ['control', 'names', 'tool']) {
+      assert.equal(back.querySelector(`#backGo .besogo-${panel}`), null, `back drops ${panel}`);
+    }
+    assert.equal(back.querySelector('#backGo input[value="Pass"]'), null, 'no Pass button');
+    assert.equal(back.querySelector('#backGo input[value="Cut"]'), null, 'no Cut button');
   });
 });
 
