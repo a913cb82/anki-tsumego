@@ -24,7 +24,7 @@ html, body, #qa, #content {
   align-items: center;
 }
 #frontGo .besogo-panels {
-  display: none; /* front buttons are hidden; never spacer the board */
+  height: auto !important; /* buttons hidden: hug the message line, never spacer */
 }
 #backGo {
 	width: min(100vw, 1400px) !important;

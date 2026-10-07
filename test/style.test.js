@@ -33,9 +33,9 @@ describe('vertical centering (safe: hugs top when overflowing)', () => {
     assert.ok(body.includes('align-items: center'), 'narrowed board stays centred');
   });
 
-  it('front control panels take no space (buttons are hidden there)', () => {
+  it('front control panels hug the message (buttons are hidden there)', () => {
     const body = ruleBody('#frontGo .besogo-panels');
-    assert.ok(body.includes('display: none'), 'no spacer above the board');
+    assert.ok(body.includes('height: auto'), 'no spacer above the board, note stays visible');
   });
 
   it('#frontGo hugs content instead of forcing viewport height', () => {

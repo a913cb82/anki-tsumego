@@ -181,6 +181,62 @@ describe('xiaomi 15 ultra portrait (ankidroid mock, 412x915)', () => {
     await back.close();
   });
 
+  it('front leaf note stays visible under the board', async (t) => {
+    const page = await load(t, 'corner-life', 0);
+    if (!page) return; // skipped
+    await page.evaluate(() => {
+      const svg = document.querySelector('#frontGo svg');
+      const d = svg.querySelector('path.besogo-svg-lines').getAttribute('d');
+      const nums = d.match(/[\d.]+/g).map(Number);
+      const ys = [...new Set(nums.filter((_, i) => i % 2 === 1))].sort((a, b) => a - b);
+      const rects = [...svg.children].filter(
+        (el) => el.tagName.toLowerCase() === 'rect' && el.getAttribute('opacity') === '0'
+      );
+      rects[(3 - 1) * ys.length + (2 - 1)].dispatchEvent(
+        new MouseEvent('click', { bubbles: true, cancelable: true })
+      );
+    });
+    await page.waitForTimeout(500);
+    const note = await page.evaluate(() => {
+      const m = document.querySelector('#content .besogo-comment');
+      const r = m.getBoundingClientRect();
+      return { text: m.innerText, height: r.height };
+    });
+    assert.ok(note.text.includes('CORRECT'), `verdict shows, got ${note.text}`);
+    assert.ok(note.text.includes('Total Errors'), `error count shows, got ${note.text}`);
+    assert.ok(note.height > 0, 'note takes space (visible, not display:none)');
+    await page.close();
+  });
+
+  it('back leaf note shows in the comment box', async (t) => {
+    const page = await loadBack(t, 'corner-life', 0);
+    if (!page) return; // skipped
+    await page.evaluate(() => {
+      const svg = document.querySelector('#backGo svg');
+      const d = svg.querySelector('path.besogo-svg-lines').getAttribute('d');
+      const nums = d.match(/[\d.]+/g).map(Number);
+      const ys = [...new Set(nums.filter((_, i) => i % 2 === 1))].sort((a, b) => a - b);
+      const rects = [...svg.children].filter(
+        (el) => el.tagName.toLowerCase() === 'rect' && el.getAttribute('opacity') === '0'
+      );
+      rects[(3 - 1) * ys.length + (2 - 1)].dispatchEvent(
+        new MouseEvent('click', { bubbles: true, cancelable: true })
+      );
+    });
+    await page.waitForTimeout(500);
+    const note = await page.evaluate(() => {
+      const boxes = [...document.querySelectorAll('#backGo .besogo-comment div')];
+      return boxes.map((b) => {
+        const r = b.getBoundingClientRect();
+        return { text: b.textContent, height: r.height };
+      });
+    });
+    const shown = note.find((n) => n.text.includes('CORRECT'));
+    assert.ok(shown, `note shows, got ${JSON.stringify(note)}`);
+    assert.ok(shown.height > 0, 'note takes space (visible)');
+    await page.close();
+  });
+
   it('short crop is vertically centred', async (t) => {
     const page = await load(t, 'corner-life', 0);
     if (!page) return; // skipped
