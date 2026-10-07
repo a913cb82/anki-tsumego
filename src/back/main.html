@@ -206,9 +206,8 @@ function checkComment(comment) {
                 boardDiv.style.width = fit.w + 'px';
                 placeBoardNarrowed(boardDiv, fit.w, width - 12);
                 if (panelsDiv) {
-                    if (height) { // Only set height if param present
-                        panelsDiv.style.height = (height - width) + 'px';
-                    }
+                    // No forced height: panels hug comment + tree, so no dead
+                    // space below them. (Landscape still sizes panels.)
                     panelsDiv.style.width = width + 'px';
                 }
             }

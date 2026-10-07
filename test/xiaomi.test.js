@@ -237,6 +237,36 @@ describe('xiaomi 15 ultra portrait (ankidroid mock, 412x915)', () => {
     await page.close();
   });
 
+  it('back panels hug content (no dead space below the tree)', async (t) => {
+    const page = await loadBack(t, 'corner-life', 0);
+    if (!page) return; // skipped
+    await page.evaluate(() => {
+      const svg = document.querySelector('#backGo svg');
+      const d = svg.querySelector('path.besogo-svg-lines').getAttribute('d');
+      const nums = d.match(/[\d.]+/g).map(Number);
+      const ys = [...new Set(nums.filter((_, i) => i % 2 === 1))].sort((a, b) => a - b);
+      const rects = [...svg.children].filter(
+        (el) => el.tagName.toLowerCase() === 'rect' && el.getAttribute('opacity') === '0'
+      );
+      rects[(3 - 1) * ys.length + (2 - 1)].dispatchEvent(
+        new MouseEvent('click', { bubbles: true, cancelable: true })
+      );
+    });
+    await page.waitForTimeout(500);
+    const panels = await page.evaluate(() => {
+      const p = document.querySelector('#backGo .besogo-panels');
+      const pr = p.getBoundingClientRect();
+      const kids = [...p.children].map((n) => n.getBoundingClientRect().height);
+      return { height: pr.height, kids };
+    });
+    const content = panels.kids.reduce((a, b) => a + b, 0);
+    assert.ok(
+      panels.height - content <= 12,
+      `panels hug content, dead=${panels.height - content}`
+    ); // 3px kid margins only, no forced-height dead space
+    await page.close();
+  });
+
   it('short crop is vertically centred', async (t) => {
     const page = await load(t, 'corner-life', 0);
     if (!page) return; // skipped
