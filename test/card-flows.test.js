@@ -392,6 +392,11 @@ describe('what the user sees on the board', () => {
       assert.equal(svg.style.height, 'auto', `${side} viewport height follows the crop`);
       const board = document.querySelector(`#${boardId} .besogo-board`);
       assert.ok(board.style.height !== '', `${side} board div owns its cropped height`);
+      if (side === 'front') {
+        assert.ok(board.style.width !== '', 'front board div owns its fitted width');
+        // No #qa wrapper (AnkiDroid): the card pads itself vertically.
+        assert.equal(document.body.style.paddingTop, '384px', 'self-centering engages');
+      }
     }
   });
 

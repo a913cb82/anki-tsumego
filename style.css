@@ -21,6 +21,10 @@ html, body, #qa, #content {
   max-width: min(700px, 100vw, 100vh);
   margin-top: auto;
   margin-bottom: auto;
+  align-items: center;
+}
+#frontGo .besogo-panels {
+  display: none; /* front buttons are hidden; never spacer the board */
 }
 #backGo {
 	width: min(100vw, 1400px) !important;

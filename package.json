@@ -10,6 +10,7 @@
     "build:check": "node build.mjs --check"
   },
   "devDependencies": {
-    "jsdom": "^30.1.2"
+    "jsdom": "^30.1.2",
+    "playwright": "^1.64.0"
   }
 }

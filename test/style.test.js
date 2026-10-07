@@ -28,6 +28,16 @@ describe('vertical centering (safe: hugs top when overflowing)', () => {
     assert.ok(body.includes('margin-bottom: auto'), 'front bottom margin auto');
   });
 
+  it('#frontGo centers a height-fitted board horizontally', () => {
+    const body = ruleBody('#frontGo');
+    assert.ok(body.includes('align-items: center'), 'narrowed board stays centred');
+  });
+
+  it('front control panels take no space (buttons are hidden there)', () => {
+    const body = ruleBody('#frontGo .besogo-panels');
+    assert.ok(body.includes('display: none'), 'no spacer above the board');
+  });
+
   it('#frontGo hugs content instead of forcing viewport height', () => {
     const body = ruleBody('#frontGo');
     assert.ok(!body.includes('height:100vh'), 'no forced viewport height (breaks tall crops)');

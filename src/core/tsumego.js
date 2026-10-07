@@ -190,6 +190,16 @@ function shouldSwapColors(root) {
   return findFirstMove(root) === 'W';
 }
 
+// Board fitting: full container width, unless the rows are the limiting
+// factor — then shrink so the whole cropped board plus the message line
+// fits the viewport with no scrolling (mirrors the resizer/drawBoard fit).
+// availW: board content width available; viewportH: window.innerHeight;
+// aspect: board height / width (> 0); reserve: px kept for the message.
+function fitBoardSize(availW, viewportH, aspect, reserve) {
+  const w = Math.min(availW, (viewportH - reserve) / aspect);
+  return { w, h: w * aspect };
+}
+
 const api = {
   classifyComment,
   charToNum,
@@ -204,6 +214,7 @@ const api = {
   sgfToBoard,
   findFirstMove,
   shouldSwapColors,
+  fitBoardSize,
 };
 
 if (typeof module !== 'undefined' && module.exports) {

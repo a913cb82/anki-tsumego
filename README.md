@@ -65,7 +65,9 @@ src/core/tsumego.js          # pure, testable mirror of the card rules
 
 ```sh
 npm install   # dev-only (jsdom for card tests); never ships to Anki
-npm test        # 58 tests: unit + build + real card flows in a DOM
+npm test        # unit + build + real card flows in a DOM (+ device layout
+                # tests if playwright chromium is installed:
+                # npx playwright install chromium)
 node build.mjs  # regenerate front.html / back.html after editing src/
 ```
 

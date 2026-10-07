@@ -16,6 +16,7 @@ const {
   sgfToBoard,
   findFirstMove,
   shouldSwapColors,
+  fitBoardSize,
 } = require('../src/core/tsumego.js');
 
 // Minimal parsed-SGF-like trees: { props: [{id, values}], children: [...] }
@@ -283,6 +284,21 @@ describe('colour normalisation (White-to-move swap)', () => {
       'W'
     );
     assert.equal(findFirstMove(node([{ id: 'C', values: ['x'] }])), null);
+  });
+
+  it('fitBoardSize drives wide boards by width', () => {
+    // 5x4 crop in a 412x915 phone viewport: width limits.
+    const fit = fitBoardSize(400, 915, 364 / 452, 80);
+    assert.equal(fit.w, 400);
+    assert.ok(Math.abs(fit.h - 400 * (364 / 452)) < 1e-9);
+  });
+
+  it('fitBoardSize drives tall boards by height (rows limiting)', () => {
+    // 13x5 crop: full width would overflow, so shrink to fit viewport.
+    const fit = fitBoardSize(400, 915, 13 / 5, 80);
+    assert.ok(fit.h <= 915 - 80, `board fits with message room, got h=${fit.h}`);
+    assert.ok(Math.abs(fit.h - fit.w * (13 / 5)) < 1e-9, 'aspect preserved');
+    assert.ok(fit.w < 400, 'width shrinks (not full-bleed)');
   });
 
   it('requests a swap only when White moves first', () => {
