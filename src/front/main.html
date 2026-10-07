@@ -1099,15 +1099,6 @@ if (msg.navChange || msg.treeChange) { // Update the navigation buttons
     }
     if (current.children.length) { // Has children
         arraySetColor(rightElements, 'black');
-        let moveColor = current.move?.color || -1 * first2move;
-        if (moveColor == 1 && initTracker == 0) {
-            document.getElementsByClassName("besogo-board")[0].style.borderColor = "black";
-initTracker++
-        } else if (initTracker == 0) {
-            document.getElementsByClassName("besogo-board")[0].style.borderColor = "white";
-initTracker++
-        }
-				document.getElementsByClassName("besogo-board")[0].style.boxShadow ="0px 0px 6px 0px grey";
         messageDiv.innerText = "";
     } else { // No children
         solvedState = true;
@@ -2413,6 +2404,6 @@ function loadProp(node, prop) {
 </script>
 <style>
     .besogo-board {
-    		border: max(0.7vmin, 6px) solid;
+    		border: max(0.7vmin, 6px) solid transparent;
     	}
 </style>

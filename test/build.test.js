@@ -85,6 +85,11 @@ describe('build pipeline (Anki paste-ready output)', () => {
     }
   });
 
+  it('front reserves an invisible border so the leaf signal never shifts layout', () => {
+    const front = fs.readFileSync(path.join(root, 'front.html'), 'utf8');
+    assert.ok(front.includes('solid transparent'), 'border present but invisible mid-problem');
+  });
+
   it('built cards stay dependency-free (no modules/externals for Anki)', () => {
     for (const file of ['front.html', 'back.html']) {
       const html = fs.readFileSync(path.join(root, file), 'utf8');

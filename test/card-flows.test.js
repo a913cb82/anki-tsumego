@@ -348,6 +348,14 @@ describe('front card multi-move solve and handicap (deeper tree)', () => {
     assert.equal(frontMessageText(document), '', 'still on the problem');
     assert.deepEqual(stoneCounts(boardSvg(document, 'frontGo')), { black: 3, white: 2 });
   });
+
+  it('mid-problem board carries no to-move border', () => {
+    const { document, jsdomErrors } = loadCard('front', fixture('corner-life'));
+    assert.deepEqual(jsdomErrors, [], 'no script errors');
+    const board = boardChrome(document, 'frontGo');
+    assert.equal(board.style.borderColor, '', 'no black/white move indicator');
+    assert.equal(board.style.boxShadow, '', 'no mid-problem glow');
+  });
 });
 
 describe('what the user sees on the board', () => {
